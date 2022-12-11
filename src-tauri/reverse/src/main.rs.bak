@@ -1,0 +1,102 @@
+#![cfg_attr(
+all(not(debug_assertions), target_os = "windows"),
+windows_subsystem = "windows"
+)]
+
+use std::io::Write;
+use std::{env};
+use std::borrow::Borrow;
+// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+use std::collections::HashMap;
+use std::io::Read;
+
+use tauri::{AppHandle, Manager, Wry, api};
+
+use tauri::{SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem, Menu, Submenu, CustomMenuItem, MenuItem, Window, WindowUrl};
+
+mod short_car;
+mod rest;
+mod menue;
+
+use menue::menu_hello::{title_menu};
+use menue::menu_hello::{system_traymenu};
+use rest::hello::{
+    generate,
+    close_app,
+    go_appaaa,
+    get_cache_dir,
+    go_app,
+    get_cache_ip_addr_api,
+};
+
+#[tokio::main]
+async fn main() {
+    let app = tauri::Builder::default()
+        .system_tray(system_traymenu())
+        // 添加菜单
+        .menu(title_menu())
+
+        // 监听自定义菜单事件
+        .on_menu_event(|event| match event.menu_item_id() {
+            "quit" => {
+                std::process::exit(0);
+            }
+            "close" => {
+                event.window().close().unwrap();
+            }
+            _ => {}
+        })
+        .setup(|app| {
+            let _win = tauri::window::WindowBuilder::new(app, "config".to_string(), WindowUrl::App("config".into()))
+                .title("财税达配置选项")
+                .inner_size(600.0, 400.0)
+                .center()
+                .always_on_top(true)
+
+                .decorations(false)
+                .build().unwrap();
+            // #[cfg(any(debug_assertions, feature = "devtools"))]
+            _win.open_devtools();
+
+
+            short_car::register_short(app);
+
+
+            // let cache_ip_addr_map = get_cache_ip_addr();
+            // let is_first_page = cache_ip_addr_map["code"].clone() == "200";
+            //
+            // if is_first_page {
+            //     let _win = tauri::window::WindowBuilder::new(app, "main_dy".to_string(), WindowUrl::default())
+            //         .title("财税达ERP-NC企业管理软件")
+            //         .maximized(true)
+            //         .inner_size(600.0, 400.0)
+            //         .build()?;
+            //
+            // } else {
+            //     go_app2(app.handle().borrow());
+            // }
+            // let _win = tauri::window::WindowBuilder::new(app, "main_dy2222".to_string(), WindowUrl::default())
+            //     .title("托盘选项")
+            //     .position(1 as f64, 1 as f64)
+            //     .inner_size(600.0, 400.0)
+            //     .build()?;
+            Ok(())
+        })
+
+        .invoke_handler(tauri::generate_handler![
+            // clear_cache,
+            generate,
+            close_app,
+            go_appaaa,
+            go_app,get_cache_ip_addr_api,
+            rest::print::get_printers_all,
+            rest::print::print_data,get_cache_dir
+        ]);
+    app.run(tauri::generate_context!())
+        .expect("error while running tauri application");
+    // let mut bvvv=json.get_mut("build")
+    //     .expect("file should have FirstName key");
+    //     .expect("file should have FirstName key")
+    //     ;
+    // bvvv=t;
+}
