@@ -20,7 +20,6 @@ jobs:
         run: |
           echo "using version tag ${GITHUB_REF:10}"
           echo ::set-output name=version::"${GITHUB_REF:10}"
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -28,7 +27,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: '${{ steps.get_version.outputs.VERSION }}'
-          release_name: 'WA+ ${{ steps.get_version.outputs.VERSION }}'
+          release_name: 'ChatGPT ${{ steps.get_version.outputs.VERSION }}'
           body: 'See the assets to download this version and install.'
 
   build-tauri:
@@ -45,7 +44,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: 16
+          node-version: 18
 
       - name: Install Rust stable
         uses: actions-rs/toolchain@v1
@@ -60,16 +59,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf
-
-      # # Install wasm-pack
-      # - uses: jetli/wasm-pack-action@v0.3.0
-      #   with:
-      #     # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
-      #     version: v0.9.1
-
-      # - name: Install rsw
-      #   run: cargo install rsw
-
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
@@ -82,18 +71,13 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-
       - name: Install app dependencies and build it
-        run: yarn && yarn build
-
-      - name: fix linux build
-        if: matrix.platform == 'ubuntu-latest'
-        run: |
-          yarn fix:linux
+        run: yarn
 
       - uses: tauri-apps/tauri-action@v0.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 📝: https://tauri.app/v1/guides/distribution/updater#signing-updates
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
@@ -112,5 +96,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # 📝: Edit the deployment directory
           publish_dir: ./updater
           force_orphan: true
