@@ -7,7 +7,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "财税达T6",
+    "productName": "csdt6",
     "version": "1.0.0"
   },
   "tauri": {
