@@ -84,7 +84,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install app dependencies and build it
-        run:  pnpm install && pnpm build
+        run: yarn && yarn build
 
       - name: fix linux build
         if: matrix.platform == 'ubuntu-latest'
